@@ -70,13 +70,13 @@ public class Assignments1 : TestHelper
     // @Country is een query parameter placeholder.
     public static List<Beer> GetAllBeersSortedByNameForCountry(string country)
     {
-        var sql =
+        string sql =
             "SELECT Beer.BeerId, Beer.Name, Beer.Type, Beer.Style, Beer.Alcohol, Beer.BrewerId, Brewer.Country FROM Beer, Brewer WHERE Beer.BrewerID = Brewer.BrewerID AND brewer.Country = @Country ORDER BY Beer.Name ASC";
         
         using var connection = DbHelper.GetConnection();
         var beers = connection.Query<Beer>(sql, new { Country = country }).ToList();
-        throw new NotImplementedException();
         return beers;
+        throw new NotImplementedException();
     }
     
     // 1.4 Question
@@ -87,10 +87,11 @@ public class Assignments1 : TestHelper
     public static int CountBrewers()
     {
         var sql =
-            "SELECT COUNT(BrewerID) FROM Beer";
+            "SELECT COUNT(BrewerID) FROM Brewer";
         
         using var connection = DbHelper.GetConnection();
-        var beers = connection.QuerySingle<int>(sql);
+        var brewers = connection.QuerySingle<int>(sql);
+        return brewers;
         throw new NotImplementedException();
     }
     
@@ -104,6 +105,11 @@ public class Assignments1 : TestHelper
     // voor Queries die net overeenkomen met de database tabellen.
     public static List<NumberOfBrewersByCountry> NumberOfBrewersByCountry()
     {
+        var sql = "SELECT Country, COUNT(1) AS NumberOfBreweries FROM Brewer GROUP BY Country ORDER BY COUNT(1) DESC";
+        
+        using var connection = DbHelper.GetConnection();
+        var breweries = connection.Query<NumberOfBrewersByCountry>(sql).ToList();
+        return breweries;
         throw new NotImplementedException();
     }
     
@@ -112,6 +118,11 @@ public class Assignments1 : TestHelper
     // Je kan in MySQL de LIMIT 1 gebruiken om 1 record terug te krijgen.
     public static Beer GetBeerWithMostAlcohol()
     {
+        var sql = "SELECT * FROM Beer WHERE Alcohol = (Select MAX(Alcohol) FROM Beer)";
+
+        using var connection = DbHelper.GetConnection();
+        var beers = connection.QuerySingle<Beer>(sql);
+        return beers;
         throw new NotImplementedException();
     }
     
@@ -122,6 +133,11 @@ public class Assignments1 : TestHelper
     // indien de brouwerij niet bestaat voor een bepaalde brewerId.
     public static Brewer? GetBreweryByBrewerId(int brewerId)
     {
+        var sql = "Select * FROM Brewer WHERE BrewerId = @BrewerId";
+
+        using var connection = DbHelper.GetConnection();
+        var Brewer = connection.QueryFirstOrDefault<Brewer>(sql, new { BrewerId = brewerId });
+        return Brewer;
         throw new NotImplementedException();
     }
     
@@ -129,6 +145,12 @@ public class Assignments1 : TestHelper
     // Gegeven de BrewerId, geef een overzicht van alle bieren van de brouwerij gesorteerd bij alcohol percentage.
     public static List<Beer> GetAllBeersByBreweryId(int brewerId)
     {
+        var sql = "Select * From Beer WHERE BrewerId = @BrewerId ORDER BY Alcohol ASC";
+
+        
+        using var connection = DbHelper.GetConnection();
+        var beers = connection.Query<Beer>(sql, new { BrewerId = brewerId }).ToList();  
+        return beers;
         throw new NotImplementedException();
     }
     
@@ -137,6 +159,11 @@ public class Assignments1 : TestHelper
     // Gebruik hiervoor de class CafeBeer (directory DTO). 
     public static List<CafeBeer> GetCafeBeers()
     {
+        var sql = "SELECT cafe.Name, beer.Name FROM cafe, sells, beer WHERE cafe.CafeId = sells.CafeId AND sells.BeerId = beer.BeerID ORDER BY cafe.Name, beer.Name";
+        
+        using var connection = DbHelper.GetConnection();
+        var cafeBeers = connection.Query<CafeBeer>(sql).ToList();
+        return cafeBeers;
         throw new NotImplementedException();
     }
     
