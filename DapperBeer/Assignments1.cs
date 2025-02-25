@@ -63,14 +63,20 @@ public class Assignments1 : TestHelper
     // Geef een overzicht van ale bieren voor een bepaald land gesorteerd op naam (alfabetisch).
     // Gebruik hiervoor de class Beer. En in je SQL-query JOIN met de tabel Brewer.
     // Gebruik de Query<Beer>(sql, new {Country = country}) methode van Dapper.
-    // In je SQL-query kan je de WHERE-clause gebruiken om te filteren op land.
+    // Ini je SQL-query kan je de WHERE-clause gebruken om te filteren op land.
     // Gebruik hiervoor query parameters placeholders in je SQL-query.
     // Dit voorkomt SQL-injectie (onderwerp van les 2).
     //      WHERE brewer.Country = @Country
     // @Country is een query parameter placeholder.
     public static List<Beer> GetAllBeersSortedByNameForCountry(string country)
     {
+        var sql =
+            "SELECT Beer.BeerId, Beer.Name, Beer.Type, Beer.Style, Beer.Alcohol, Beer.BrewerId, Brewer.Country FROM Beer, Brewer WHERE Beer.BrewerID = Brewer.BrewerID AND brewer.Country = @Country ORDER BY Beer.Name ASC";
+        
+        using var connection = DbHelper.GetConnection();
+        var beers = connection.Query<Beer>(sql, new { Country = country }).ToList();
         throw new NotImplementedException();
+        return beers;
     }
     
     // 1.4 Question
@@ -80,6 +86,11 @@ public class Assignments1 : TestHelper
     // Voor deze vraag kijken specifiek naar deze pagina: https://www.learndapper.com/dapper-query
     public static int CountBrewers()
     {
+        var sql =
+            "SELECT COUNT(BrewerID) FROM Beer";
+        
+        using var connection = DbHelper.GetConnection();
+        var beers = connection.QuerySingle<int>(sql);
         throw new NotImplementedException();
     }
     
