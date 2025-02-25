@@ -173,6 +173,12 @@ public class Assignments1 : TestHelper
     // Geef de gemiddelde waardering (score in de tabel Review) van een biertje terug gegeven de BeerId.
     public static decimal GetBeerRating(int beerId)
     {
+        
+        var sql = "Select AVG(Score) FROM Review WHERE BeerId = @BeerId";
+
+        using var connection = DbHelper.GetConnection();
+        var avg_Score = connection.QuerySingle<decimal>(sql, new { BeerId = beerId });
+        return avg_Score;
         throw new NotImplementedException();
     }
     
@@ -181,7 +187,11 @@ public class Assignments1 : TestHelper
     // De test werkt alleen als de vorige vraag ook correct is gemaakt.
     public static void InsertReview(int beerId, decimal score)
     {
-        throw new NotImplementedException();
+
+        var sql = "INSERT INTO Review (BeerId, Score) VALUES (@BeerId, @Score)";
+        
+        using var connection = DbHelper.GetConnection();
+        connection.Execute(sql, new { BeerId = beerId, Score = score });
     }
     
     // 1.12 Question
@@ -189,6 +199,11 @@ public class Assignments1 : TestHelper
     // Deze test werkt alleen decimal GetBeerRating(int beerId) methode correct is (twee vragen hiervoor).
     public static int InsertReviewReturnsReviewId(int beerId, decimal score)
     {
+        var sql = "INSERT INTO Review (BeerId, Score) Values(28, 4.5)";
+        
+        
+        using var connection = DbHelper.GetConnection();
+        var result = connection.Execute(sql, new { BeerId = beerId, Score = score });
         throw new NotImplementedException();
     }
     
