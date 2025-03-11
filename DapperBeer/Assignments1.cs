@@ -160,12 +160,18 @@ public class Assignments1 : TestHelper
     // Gebruik hiervoor de class CafeBeer (directory DTO). 
     public static List<CafeBeer> GetCafeBeers()
     {
-        var sql = "SELECT cafe.Name, beer.Name FROM cafe, sells, beer WHERE cafe.CafeId = sells.CafeId AND sells.BeerId = beer.BeerID ORDER BY cafe.Name, beer.Name";
+        var sql = @"SELECT c.Name, b.Name
+                   FROM sells JOIN Beer ON sells.BeerID = beers.BeerID
+                   JOIN Cafe ON sells.CafeId = cave.CafeId";
+
+        /*var sql = @"SELECT cafe.Name AS CafeName, beer.Name AS Beers
+                    FROM cafe, sells, beer WHERE cafe.CafeId = sells.CafeId AND sells.BeerId = beer.BeerID 
+                    ORDER BY cafe.Name, beer.Name";*/
         
         using var connection = DbHelper.GetConnection();
         var cafeBeers = connection.Query<CafeBeer>(sql).ToList();
         return cafeBeers;
-        throw new NotImplementedException();
+       
     }
     
     // De vorige 1.10 Question heb ik verwijderd, deze was nogal lastig
@@ -200,12 +206,15 @@ public class Assignments1 : TestHelper
     // Deze test werkt alleen decimal GetBeerRating(int beerId) methode correct is (twee vragen hiervoor).
     public static int InsertReviewReturnsReviewId(int beerId, decimal score)
     {
-        var sql = "INSERT INTO Review (BeerId, Score) Values(28, 4.5)";
-        
-        
-        using var connection = DbHelper.GetConnection();
-        var result = connection.Execute(sql, new { BeerId = beerId, Score = score });
-        throw new NotImplementedException();
+        var connection = DbHelper.GetConnection();
+        var sql = @"INSERT INTO Review (BeerId, Score)
+                    Values(@BeerId, @Score);
+                    SELECT LAST_INSERT_ID();";
+       
+      
+       int result = connection.QuerySingle<int>(sql, new { BeerId = beerId, Score = score });
+
+       return result;
     }
     
     // twee methoden verwijderd
