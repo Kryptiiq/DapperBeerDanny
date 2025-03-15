@@ -160,13 +160,13 @@ public class Assignments1 : TestHelper
     // Gebruik hiervoor de class CafeBeer (directory DTO). 
     public static List<CafeBeer> GetCafeBeers()
     {
-        var sql = @"SELECT c.Name, b.Name
-                   FROM sells JOIN Beer ON sells.BeerID = beers.BeerID
-                   JOIN Cafe ON sells.CafeId = cave.CafeId";
+        /*var sql = @"SELECT cafe.Name, beer.Name
+                   FROM sells JOIN Beer ON sells.BeerID = beer.BeerID
+                   JOIN Cafe ON sells.CafeId = cafe.CafeId";*/
 
-        /*var sql = @"SELECT cafe.Name AS CafeName, beer.Name AS Beers
+        var sql = @"SELECT cafe.Name AS CafeName, beer.Name AS Beers
                     FROM cafe, sells, beer WHERE cafe.CafeId = sells.CafeId AND sells.BeerId = beer.BeerID 
-                    ORDER BY cafe.Name, beer.Name";*/
+                    ORDER BY cafe.Name, beer.Name";
         
         using var connection = DbHelper.GetConnection();
         var cafeBeers = connection.Query<CafeBeer>(sql).ToList();

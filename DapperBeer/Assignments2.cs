@@ -29,7 +29,12 @@ public class Assignments2
     // !!!DOE DIT NOOIT MEER SVP!!!!
     public static List<string> GetBeersByCountryWithSqlInjection(string country)
     {
-        throw new NotImplementedException();
+        var connection = DbHelper.GetConnection();
+        var sql = $"SELECT * FROM brewer WHERE Country = '{country}'";
+        
+        var result = connection.Query<string>(sql).ToList();
+        return result;  
+       
     }
     
     // 2.2 Question
@@ -41,8 +46,22 @@ public class Assignments2
     // Het vraagteken bij 'GetAllBeersByCountry(string? country)' geeft aan dat het argument optioneel is (string? country).
     // Dit betekent dus dat country null kan zijn.
     public static List<string> GetAllBeersByCountry(string? country)
+
     {
-        throw new NotImplementedException();
+        
+        
+        var connection = DbHelper.GetConnection();
+
+        if (country == null)
+        {
+            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID ORDER BY beer.Name";
+            return connection.Query<string>(sql).ToList();
+        }
+        else
+        {
+           var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country ORDER BY beer.Name";
+            return connection.Query<string>(sql, new { Country = country }).ToList();
+        }
     }
     
     // 2.3 Question
@@ -52,7 +71,30 @@ public class Assignments2
     // Gebruikt <= (kleiner of gelijk aan) voor de vergelijking van het minAlcohol.
     public static List<string> GetAllBeersByCountryAndMinAlcohol(string? country = null, decimal? minAlcohol = null)
     {
-        throw new NotImplementedException();
+        var connection = DbHelper.GetConnection();
+
+        if (country == null && minAlcohol == null)
+        {
+            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID ORDER BY beer.Name";
+            return connection.Query<string>(sql).ToList();
+        }
+        else if (country == null && minAlcohol != null)
+        {
+            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
+            return connection.Query<string>(sql, new { MinAlcohol = minAlcohol }).ToList();
+        }
+        else if (country != null && minAlcohol == null)
+        {
+            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country ORDER BY beer.Name";
+            return connection.Query<string>(sql, new { Country = country }).ToList();
+        }
+        else
+        {
+            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
+            return connection.Query<string>(sql, new { Country = country, MinAlcohol = minAlcohol }).ToList();
+        }
+    
+        
     }
     
     // 2.4 Question
