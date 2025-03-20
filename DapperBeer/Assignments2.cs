@@ -219,15 +219,15 @@ public class Assignments2
     public static List<Beer> GetBeersByCountryAndType(BeerFilter filter)
     {
         using IDbConnection connection = DbHelper.GetConnection();
-        string sql = $"""
-                      SELECT beer.BeerId, beer.Name, beer.Type, beer.Style, beer.Alcohol, beer.BrewerId
-                      FROM Beer beer 
-                      JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId
-                      WHERE (@Country IS NULL OR Brewer.Country = @Country)
-                      AND (@Type IS NULL OR beer.Type = @Type)
-                      ORDER BY OrderBy
-                      LIMIT @PageSize OFFSET @Offset
-                      """;
+        string sql = $@"
+                SELECT beer.BeerId, beer.Name, beer.Type, beer.Style, beer.Alcohol, beer.BrewerId
+                FROM Beer beer 
+                JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId
+                WHERE (@Country IS NULL OR brewer.Country = @Country)
+                AND (@Type IS NULL OR beer.Type = @Type)
+                ORDER BY @OrderBy
+                LIMIT @PageSize OFFSET @Offset
+";
 
         var Parameters = new
         {
@@ -241,8 +241,6 @@ public class Assignments2
         
         var results = connection.Query<Beer>(sql, Parameters).ToList();
         
-        SqlBuilder builder = new SqlBuilder();
-
-        throw new NotImplementedException();
+        return results;
     }
 }
