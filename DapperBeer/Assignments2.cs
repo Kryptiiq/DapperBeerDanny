@@ -46,24 +46,19 @@ public class Assignments2
     // Het vraagteken bij 'GetAllBeersByCountry(string? country)' geeft aan dat het argument optioneel is (string? country).
     // Dit betekent dus dat country null kan zijn.
     public static List<string> GetAllBeersByCountry(string? country)
-
     {
-        
-        
         var connection = DbHelper.GetConnection();
-
-        if (country == null)
-        {
-            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID ORDER BY beer.Name";
-            return connection.Query<string>(sql).ToList();
-        }
-        else
-        {
-           var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country ORDER BY beer.Name";
-            return connection.Query<string>(sql, new { Country = country }).ToList();
-        }
+        var sql =
+            @"SELECT Beer.Name
+                FROM Beer 
+                 JOIN Brewer ON Beer.BrewerID = Brewer.BrewerID 
+                  WHERE (@Country IS NULL OR Brewer.Country = @Country)
+                  ORDER BY Beer.Name";
+        var beers = connection.Query<string>(sql, new { Country = country }).ToList();
+        return beers;
     }
-    
+
+
     // 2.3 Question
     // Nu doen we hetzelfde als in de vorige opdracht GetAllBeersByCountry, echter voegen we een extra parameter toe,
     // het minimal alcoholpercentage.
@@ -71,28 +66,38 @@ public class Assignments2
     // Gebruikt <= (kleiner of gelijk aan) voor de vergelijking van het minAlcohol.
     public static List<string> GetAllBeersByCountryAndMinAlcohol(string? country = null, decimal? minAlcohol = null)
     {
+        
         var connection = DbHelper.GetConnection();
+        var sql =
+            @"SELECT Beer.Name
+                FROM Beer 
+                 JOIN Brewer ON Beer.BrewerID = Brewer.BrewerID 
+                  WHERE (@Country IS NULL OR Brewer.Country = @Country)
+                  AND (@minAlcohol IS NULL OR beer.Alcohol >= @minAlcohol)
+                  ORDER BY Beer.Name";
+        var beers = connection.Query<string>(sql, new { Country = country, MinAlcohol = minAlcohol }).ToList();
+        return beers;
 
-        if (country == null && minAlcohol == null)
-        {
-            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID ORDER BY beer.Name";
-            return connection.Query<string>(sql).ToList();
-        }
-        else if (country == null && minAlcohol != null)
-        {
-            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
-            return connection.Query<string>(sql, new { MinAlcohol = minAlcohol }).ToList();
-        }
-        else if (country != null && minAlcohol == null)
-        {
-            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country ORDER BY beer.Name";
-            return connection.Query<string>(sql, new { Country = country }).ToList();
-        }
-        else
-        {
-            var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
-            return connection.Query<string>(sql, new { Country = country, MinAlcohol = minAlcohol }).ToList();
-        }
+        // if (country == null && minAlcohol == null)
+        // {
+        //     var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID ORDER BY beer.Name";
+        //     return connection.Query<string>(sql).ToList();
+        // }
+        // else if (country == null && minAlcohol != null)
+        // {
+        //     var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
+        //     return connection.Query<string>(sql, new { MinAlcohol = minAlcohol }).ToList();
+        // }
+        // else if (country != null && minAlcohol == null)
+        // {
+        //     var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country ORDER BY beer.Name";
+        //     return connection.Query<string>(sql, new { Country = country }).ToList();
+        // }
+        // else 
+        // {
+        //     var sql = "SELECT beer.Name FROM beer, brewer WHERE beer.BrewerID = brewer.BrewerID AND brewer.Country = @Country AND beer.Alcohol >= @MinAlcohol ORDER BY beer.Name";
+        //     return connection.Query<string>(sql, new { Country = country, MinAlcohol = minAlcohol }).ToList();
+        // }
     
         
     }
@@ -132,17 +137,30 @@ public class Assignments2
         string? country = null, decimal? minAlcohol = null, string orderBy = "beer.Name")
     {
         using IDbConnection connection = DbHelper.GetConnection();
-        string sql = $"""
-                      SELECT beer.Name
-                      FROM Beer beer 
-                           JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId 
-                      /**where**/
-                      /**orderby**/
-                      """;
-        
-        SqlBuilder builder = new SqlBuilder();
-        
-        throw new NotImplementedException();
+
+        var template = new SqlBuilder();
+        var selector = template.AddTemplate($$"""
+                                              SELECT beer.Name
+                                              FROM Beer beer 
+                                              JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId 
+                                              /**where**/
+                                              ORDER BY {{orderBy}}
+                                              """);
+
+
+        if (country != null)
+        {
+            template = template.Where("brewer.Country = @Country", new { Country = country });
+        }
+
+        if (minAlcohol != null)
+        {
+            template = template.Where("beer.Alcohol >= @MinAlcohol", new { MinAlcohol = minAlcohol });
+        }
+
+
+        var beers = connection.Query<string>(selector.RawSql, selector.Parameters).ToList();
+        return beers;
     }
 
     // 2.5 Question
@@ -150,13 +168,33 @@ public class Assignments2
     // en de naam van de brouwmeester als de brouwerij deze heeft (LEFT JOIN).
     // Sorteer de resultaten op bier naam.
     //
-    // Gebruik de volgende where-clause: WHERE BrewmasterName IS NOT NULL (in de query niet in de view)
+    // Gebruik de volgende where-clause: WHERE BrewmasterName IS NOT NULL (in de query niet in de view) (wtf is een view?)
     // Gebruik de klasse BrewerBeerBrewmaster om de resultaten in op te slaan. (directory DTO).
     public static List<BrewerBeerBrewmaster> GetAllBeerNamesWithBreweryAndBrewmaster()
     {
-        throw new NotImplementedException();
+        
+        var connection = DbHelper.GetConnection();
+        var sql = @"
+            SELECT
+                BeerName,
+                BrewerName,
+                BrewmasterName
+            FROM
+                BeerBrewerBrewmaster
+            WHERE
+                BrewmasterName IS NOT NULL
+            ORDER BY
+                BeerName;";
+                        
+        
+        
+        var results = connection.Query<BrewerBeerBrewmaster>(sql).ToList();
+        
+        return results;
+                        
+
     }
-    
+
     // 2.6 Question
     // Soms is het onhandig om veel parameters mee te geven aan een methode.
     // Dit kan je oplossen door een klasse te maken die de parameters bevat.
@@ -184,11 +222,24 @@ public class Assignments2
         string sql = $"""
                       SELECT beer.BeerId, beer.Name, beer.Type, beer.Style, beer.Alcohol, beer.BrewerId
                       FROM Beer beer 
-                           JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId
-                      /**where**/
-                      /**orderby**/
+                      JOIN Brewer brewer ON beer.BrewerId = brewer.BrewerId
+                      WHERE (@Country IS NULL OR Brewer.Country = @Country)
+                      AND (@Type IS NULL OR beer.Type = @Type)
+                      ORDER BY OrderBy
                       LIMIT @PageSize OFFSET @Offset
                       """;
+
+        var Parameters = new
+        {
+            Country = filter.Country,
+            Type = filter.Type,
+            PageSize = filter.PageSize,
+            PageIndex = filter.PageIndex,
+            Offset = filter.Offset,
+            OrderBy = filter.OrderBy
+        };
+        
+        var results = connection.Query<Beer>(sql, Parameters).ToList();
         
         SqlBuilder builder = new SqlBuilder();
 
